@@ -1,0 +1,75 @@
+#include <iostream>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui.hpp>
+#include <xlsxwriter.h>
+
+using namespace std;
+using namespace cv;
+
+// Funkce pro výběr bodu uživatelem
+Point selectPoint(const Mat &image) {
+    imshow("Image", image);
+    cout << "Vyberte bod na obrazovce stisknutím tlačítka myši." << endl;
+    Point point = waitMouse();
+    destroyWindow("Image");
+    return point;
+}
+
+// Funkce pro sejmutí bodu myší
+Point waitMouse() {
+Point point;
+setMouseCallback("Image", [](int event, int x, int y, int flags, void* userdata) {
+if (event == EVENT_LBUTTONDOWN) {
+(Point)userdata = Point(x, y);
+}
+}, &point);
+while (point.x == 0 && point.y == 0) {
+waitKey(100);
+}
+return point;
+}
+
+// Funkce pro výběr směru uživatelem
+bool selectDirection() {
+    cout << "Zadejte směr (0 pro horizontální, 1 pro vertikální): ";
+    int direction;
+    cin >> direction;
+    return direction == 1;
+}
+
+int main() {
+    // Načtení obrazu
+    Mat image = imread("image.jpg");
+    
+    // Výběr bodu uživatelem
+    Point point = selectPoint(image);
+    
+    // Výběr směru uživatelem
+    bool vertical = selectDirection();
+    
+    // Výběr intenzit na daném bodě
+    int rowCount = image.rows;
+    int colCount = image.cols;
+    vector<int> intensities;
+    if (vertical) {
+        for (int row = 0; row < rowCount; row++) {
+            intensities.push_back(image.at<uchar>(row, point.x));
+        }
+    } else {
+        for (int col = 0; col < colCount; col++) {
+            intensities.push_back(image.at<uchar>(point.y, col));
+        }
+    }
+    
+    // Zápis intenzit do souboru xlsx
+    lxw_workbook *workbook = workbook_new("intensities.xlsx");
+    lxw_worksheet *worksheet = workbook_add_worksheet(workbook, NULL);
+    for (int i = 0; i < intensities.size(); i++) {
+        worksheet_write_number(worksheet, i, 0, intensities[i], NULL);
+    }
+    workbook_close(workbook);
+    
+    cout << "Intenzity byly uloženy do souboru intensities.xlsx." << endl;
+    
+    return 0;
+}

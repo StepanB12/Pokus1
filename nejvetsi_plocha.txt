@@ -1,0 +1,63 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+
+using namespace std;
+
+// Výpočet klouzavého průměru
+vector<double> movingAverage(vector<double> &numbers, int windowSize) {
+    vector<double> movingAvg;
+    double sum = 0;
+    int n = numbers.size();
+    
+    for (int i = 0; i < n; i++) {
+        sum += numbers[i];
+        if (i >= windowSize - 1) {
+            movingAvg.push_back(sum / windowSize);
+            sum -= numbers[i - windowSize + 1];
+        }
+    }
+    
+    return movingAvg;
+}
+
+// Najde bod odchylky s největší plochou
+int findMaxDeviationPoint(vector<double> &numbers, vector<double> &movingAvg) {
+    int n = numbers.size();
+    int maxDeviationIndex = 0;
+    double maxDeviation = 0;
+    double deviation = 0;
+    
+    for (int i = 0; i < n; i++) {
+        deviation = abs(numbers[i] - movingAvg[i]);
+        if (deviation > maxDeviation) {
+            maxDeviation = deviation;
+            maxDeviationIndex = i;
+        }
+    }
+    
+    return maxDeviationIndex;
+}
+
+int main() {
+    vector<double> numbers;
+    double number;
+    int windowSize = 14;
+    
+    // Načtení čísel ze souboru
+    ifstream file("numbers.txt");
+    while (file >> number) {
+        numbers.push_back(number);
+    }
+    file.close();
+    
+    // Výpočet klouzavého průměru
+    vector<double> movingAvg = movingAverage(numbers, windowSize);
+    
+    // Najití bodu odchylky s největší plochou
+    int maxDeviationPoint = findMaxDeviationPoint(numbers, movingAvg) + 1;
+    
+    cout << "Bod odchylky s největší plochou se nachází na pozici " << maxDeviationPoint << endl;
+    
+    return 0;
+}
